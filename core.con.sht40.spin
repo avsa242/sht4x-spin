@@ -5,16 +5,18 @@
     Description: SHT40-specific constants
     Copyright (c) 2023
     Started Oct 26, 2023
-    Updated Oct 27, 2023
+    Updated Oct 28, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
 
-' I2C Configuration
+    { I2C configuration }
     I2C_MAX_FREQ        = 1_000_000             ' device max I2C bus freq
     SLAVE_ADDR          = $44 << 1              ' 7-bit format slave address
+
+    { timings }
     T_POR               = 1_000                 ' startup time (usecs)
     T_SR                = 1_000                 ' soft-reset
     T_W                 = 1_000                 ' min. wait time between I2C commands

@@ -5,7 +5,7 @@
     Description: Driver for Sensirion SHT4x-series sensors
     Copyright (c) 2023
     Started Oct 26, 2023
-    Updated Oct 27, 2023
+    Updated Oct 28, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -75,7 +75,7 @@ PUB defaults()
 
 
 pub measure() | tmp
-
+' Perform a measurement
     tmp := 0
     command(core.MEAS_TRH_HIGHPREC, @tmp)
     _last_temp := tmp.word[0]
@@ -88,8 +88,8 @@ PUB reset()
     time.msleep(core.T_SR)
 
 
-pub rh_data(): rdata
-
+PUB rh_data(): rdata
+' Get relative humidity ADC word
     measure()
     return _last_rh
 
@@ -103,11 +103,11 @@ pub rh_word2pct(rh_word): rh_pct
 PUB serial_num(ptr_sn): status
 ' Get serial number
 '   ptr_sn: pointer to copy serial number to (4 bytes)
-    status := command(core.READ_SN, ptr_sn)
+    return command(core.READ_SN, ptr_sn)
 
 
-pub temp_data(): tdata
-
+PUB temp_data(): tdata
+' Get temperature ADC word
     measure()
     return _last_temp
 
@@ -123,10 +123,9 @@ PUB temp_word2deg(temp_word): temp_deg
         other:
             return FALSE
 
-var byte _data[6]
-
-PRI command(cmd, ptr_data=0): status | i, word data, byte crc_tmp, p
+PRI command(cmd, ptr_data=0): status | wd, word data, byte crc_tmp
 ' Issue command to sensor
+'   Returns: number of bytes read
     status := 0
     case cmd
         core.MEAS_TRH_HIGHPREC, core.MEAS_TRH_MEDPREC, core.MEAS_TRH_LOWPREC, ...
@@ -141,22 +140,19 @@ PRI command(cmd, ptr_data=0): status | i, word data, byte crc_tmp, p
 
             i2c.start()
             i2c.write(SLAVE_RD)
-            p := 0
-            repeat i from 0 to 1
+            repeat wd from 0 to 1
                 data := i2c.rdword_msbf(i2c.ACK)
-                crc_tmp := i2c.rd_byte(i == 1)  ' send NAK (-1) if i == 1 ("done reading data")
-                _data[p++] := data.byte[0]
-                _data[p++] := data.byte[1]
-                _data[p++] := crc_tmp
+                crc_tmp := i2c.rd_byte(wd == 1) ' send NAK (-1) if i == 1 ("done reading data")
                 if ( crc_tmp == crc.sensirion_crc8(@data, 2) )
                 { data is good - copy it to the destination buffer }
-                    'word[ptr_data][i] := tmp
-                    wordmove(ptr_data+(i*2), @data, 1)
+                    wordmove(ptr_data+(wd*2), @data, 1)
+                    status += 2
                 else
-                    i2c.stop()
-                    return -1'EBADCRC           ' CRC failed
+                { CRC is bad - don't copy the data, and return an error }
+                    status := -1
+                    quit
             i2c.stop()
-            return 6                            ' number of bytes read
+            return                              ' number of bytes read
         core.SOFT_RESET:
             i2c.start()
             i2c.write(SLAVE_WR)
