@@ -58,6 +58,8 @@ PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, I2C_ADDR): status
         if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             time.usleep(core.T_POR)             ' wait for device startup
             if ( i2c.present(SLAVE_WR) )        ' test device bus presence
+                { set the default heater power and duration }
+                _heater_cmd := core.HEATER_LO_100MSEC
                 return
     ' if this point is reached, something above failed
     ' Re-check I/O pin assignments, bus speed, connections, power
@@ -73,6 +75,58 @@ PUB stop()
 PUB defaults()
 ' Set factory defaults
 
+
+PUB heater_enabled(e)
+' Enable the on-chip heater
+'   Valid values:
+'       0: ignored
+'       non-zero: enable
+'   NOTE: The heater current and duration should be set prior to calling this method
+'       (the driver defaults to low power, short duration)
+'   NOTE: The heater will automatically shut off after the set duration
+    if ( e )
+        command(_heater_cmd)
+
+
+VAR byte _heater_cmd
+PUB heater_set_current(c)
+' Set heater current, in milliamperes
+'   NOTE: Values are approximate/typical, and valid only at a supply of 3.3V
+    case c
+        60:
+            _heater_cmd := (_heater_cmd & !core.HEATER_LEVEL_MASK) | core.HEATER_HI
+        33:
+            _heater_cmd := (_heater_cmd & !core.HEATER_LEVEL_MASK) | core.HEATER_MED
+        6:
+            _heater_cmd := (_heater_cmd & !core.HEATER_LEVEL_MASK) | core.HEATER_LO
+        other:
+            return -1'EINVALID_ARG
+
+
+PUB heater_set_duration(d)
+' Set heater duration in milliseconds
+'   Valid values: 1000 (1 second) or 100
+'   NOTE: The heater will automatically shut off after the specified time
+'   NOTE: The heater is designed for a maximum duty cycle of 5% (reference datasheet section 4.8)
+'   NOTE: 100ms will automatically be chosen if the value is anything other than 1_000
+    case ( _heater_cmd & core.HEATER_LEVEL_MASK )
+        core.HEATER_HI:
+            if ( d == 1_000 )
+                _heater_cmd := core.HEATER_HI_1SEC
+            else
+                _heater_cmd := core.HEATER_HI_100MSEC
+        core.HEATER_MED:
+            if ( d == 1_000 )
+                _heater_cmd := core.HEATER_MED_1SEC
+            else
+                _heater_cmd := core.HEATER_MED_100MSEC
+        core.HEATER_LO:
+            if ( d == 1_000 )
+                _heater_cmd := core.HEATER_LO_1SEC
+            else
+                _heater_cmd := core.HEATER_LO_100MSEC
+        other:
+            _heater_cmd |= core.HEATER_LO
 
 pub measure() | tmp
 ' Perform a measurement

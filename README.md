@@ -10,7 +10,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the SHT4x-s
 
 * P1: I2C connection at up to 1MHz (PASM-based I2C) or ~26kHz (bytecode-based I2C)
 * Read temperature, relative humidity (ADC words or scaled values)
-
+* Set heater current and duration
+* Read the serial number
 
 
 ## Requirements

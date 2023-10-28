@@ -32,12 +32,17 @@ CON
     SOFT_RESET          = $94                   ' returns no data
 
     { activate heater and high-precision meaurements }
-    HEATER_HI_1SEC      = $39
-    HEATER_HI_100MSEC   = $32
-    HEATER_MED_1SEC     = $2f
-    HEATER_MED_100MSEC  = $24
-    HEATER_LO_1SEC      = $1e
-    HEATER_LO_100MSEC   = $15
+    HEATER_LEVEL_MASK   = $f0
+    HEATER_DUR_MASK     = $0f
+    HEATER_HI           = $30
+    HEATER_HI_1SEC      = HEATER_HI | $09
+    HEATER_HI_100MSEC   = HEATER_HI | $02
+    HEATER_MED          = $20
+    HEATER_MED_1SEC     = HEATER_MED | $0f
+    HEATER_MED_100MSEC  = HEATER_MED | $04
+    HEATER_LO           = $10
+    HEATER_LO_1SEC      = HEATER_LO | $0e
+    HEATER_LO_100MSEC   = HEATER_LO | $05
 
 
 PUB null()
