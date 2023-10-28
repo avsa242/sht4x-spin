@@ -1,10 +1,10 @@
 {
     --------------------------------------------
-    Filename: sensor.temp_rh.sht40.spin
+    Filename: sensor.temp_rh.sht40.spin2
     Author: Jesse Burt
-    Description: Driver for Sensirion SHT4x-series sensors
+    Description: Driver for Sensirion SHT4x-series sensors (P2 version)
     Copyright (c) 2023
-    Started Oct 26, 2023
+    Started Oct 28, 2023
     Updated Oct 28, 2023
     See end of file for terms of use.
     --------------------------------------------
@@ -16,8 +16,8 @@ CON
     SLAVE_WR    = core.SLAVE_ADDR
     SLAVE_RD    = core.SLAVE_ADDR|1
 
-    DEF_SCL     = 28
-    DEF_SDA     = 29
+    DEF_SCL     = 0
+    DEF_SDA     = 1
     DEF_HZ      = 100_000
     DEF_ADDR    = 0                             ' not used
     I2C_MAX_FREQ= core.I2C_MAX_FREQ
@@ -38,14 +38,8 @@ CON
 
 OBJ
 
-{ decide: Bytecode I2C engine, or PASM? Default is PASM if BC isn't specified }
-#ifdef SHT40_I2C_BC
-    i2c:    "com.i2c.nocog"                     ' BC I2C engine
-#else
     i2c:    "com.i2c"                           ' PASM I2C engine
-#endif
     core:   "core.con.sht40.spin"               ' hw-specific constants
-    time:   "time"                              ' basic timing functions
     crc:    "math.crc"                          ' CRC/checksum routines
 
 
@@ -65,9 +59,9 @@ PUB start(): status
 
 PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, I2C_ADDR): status
 ' Start using custom IO pins and I2C bus frequency
-    if ( lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) )
+    if ( lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) )
         if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
-            time.usleep(core.T_POR)             ' wait for device startup
+            waitus(core.T_POR)                  ' wait for device startup
             if ( i2c.present(SLAVE_WR) )        ' test device bus presence
                 { set the default heater power and duration, and measurement repeatability }
                 defaults()
@@ -164,7 +158,7 @@ PUB repeatability(r)
 PUB reset()
 ' Reset the device
     command(core.SOFT_RESET)
-    time.msleep(core.T_SR)
+    waitms(core.T_SR)
 
 
 PUB rh_data(): rdata
@@ -217,7 +211,7 @@ PRI command(cmd, ptr_data=0): status | wd, word data, byte crc_tmp
             i2c.write(cmd)
             i2c.stop()
 
-            time.msleep(10)
+            waitms(10)
 
             i2c.start()
             i2c.write(SLAVE_RD)
@@ -242,7 +236,7 @@ PRI command(cmd, ptr_data=0): status | wd, word data, byte crc_tmp
             return 0
 
 
-#include "sensor.temp_rh.common.spinh"          ' code common to all temp/RH drivers
+#include "sensor.temp_rh.common.spin2h"         ' code common to all temp/RH drivers
 
 
 DAT

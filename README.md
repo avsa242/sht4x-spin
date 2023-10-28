@@ -9,8 +9,10 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the SHT4x-s
 ## Salient Features
 
 * P1: I2C connection at up to 1MHz (PASM-based I2C) or ~26kHz (bytecode-based I2C)
+* P2: I2C connection at up to 1MHz (NuCode build) 900kHz (PASM2 build)
 * Read temperature, relative humidity (ADC words or scaled values)
 * Set heater current and duration
+* Set measurement repeatability
 * Read the serial number
 
 
@@ -30,10 +32,10 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1	    | SPIN1    | FlexSpin (6.5.0)	| Bytecode     | OK                    |
-| P1	    | SPIN1    | FlexSpin (6.5.0)       | Native/PASM  | OK                    |
-| P2	    | SPIN2    | FlexSpin (6.5.0)       | NuCode       | Not yet implemented   |
-| P2        | SPIN2    | FlexSpin (6.5.0)       | Native/PASM2 | Not yet implemented   |
+| P1        | SPIN1    | FlexSpin (6.5.0)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (6.5.0)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (6.5.0)       | NuCode       | OK                    |
+| P2        | SPIN2    | FlexSpin (6.5.0)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
 
