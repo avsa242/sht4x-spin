@@ -1,35 +1,45 @@
 {
-    --------------------------------------------
-    Filename: SHT40-Demo.spin
-    Author: Jesse Burt
-    Description: SHT40 driver demo
+----------------------------------------------------------------------------------------------------
+    Filename:       SHT40-Demo.spin
+    Description:    SHT40 driver demo
         * Temp/RH data output
-    Copyright (c) 2023
-    Started Oct 27, 2023
-    Updated Oct 27, 2023
-    See end of file for terms of use.
-    --------------------------------------------
-
-    Build-time symbols supported by driver:
-        -DSHT40_I2C (default if none specified)
-        -DSHT40_I2C_BC
+    Author:         Jesse Burt
+    Started:        Oct 27, 2023
+    Updated:        Sep 5, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
+' Uncomment the two lines below to use the bytecode-based I2C engine
 '#define SHT40_I2C_BC                           ' use the bytecode-based I2C engine
 '#pragma exportdef(SHT40_I2C_BC)                '
 
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
 
 OBJ
 
-    cfg:    "boardcfg.flip"
     sensor: "sensor.temp_rh.sht40" | SCL=28, SDA=29, I2C_FREQ=1_000_000
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     time:   "time"
+
+
+PUB main() | temp, rh, tscl
+
+    setup()
+
+    sensor.temp_scale(sensor.C)                 ' C, F
+
+    repeat
+        ser.pos_xy(0, 3)
+        temp := sensor.temperature()
+        rh := sensor.rh()
+        tscl := lookupz(sensor.temp_scale(-2): "C", "F", "K")
+        ser.printf3(@"Temp. (deg %c): %3.3d.%02.2d\n\r", tscl, (temp / 100), ||(temp // 100))
+        ser.printf2(@"Rel. humidity (%%): %3.3d.%02.2d\n\r", (rh / 100), (rh // 100))
 
 
 PUB setup()
@@ -37,22 +47,18 @@ PUB setup()
     ser.start()
     time.msleep(30)
     ser.clear()
-    ser.strln(string("Serial terminal started"))
+    ser.strln(@"Serial terminal started")
 
     if ( sensor.start() )
-        ser.strln(string("SHT40 driver started"))
+        ser.strln(@"SHT40 driver started")
     else
-        ser.strln(string("SHT40 driver failed to start - halting"))
+        ser.strln(@"SHT40 driver failed to start - halting")
         repeat
 
-    sensor.temp_scale(sensor.C)
-    demo()
-
-#include "temp_rhdemo.common.spinh"             ' code common to all temp/RH demos
 
 DAT
 {
-Copyright 2023 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

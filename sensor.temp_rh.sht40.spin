@@ -1,39 +1,32 @@
 {
-    --------------------------------------------
-    Filename: sensor.temp_rh.sht40.spin
-    Author: Jesse Burt
-    Description: Driver for Sensirion SHT4x-series sensors
-    Copyright (c) 2023
-    Started Oct 26, 2023
-    Updated Oct 28, 2023
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       sensor.temp_rh.sht40.spin
+    Description:    Driver for Sensirion SHT4x-series sensors
+    Author:         Jesse Burt
+    Started:        Oct 26, 2023
+    Updated:        Sep 5, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
 CON
 
-    { I2C }
-    SLAVE_WR    = core.SLAVE_ADDR
-    SLAVE_RD    = core.SLAVE_ADDR|1
-
-    DEF_SCL     = 28
-    DEF_SDA     = 29
-    DEF_HZ      = 100_000
-    DEF_ADDR    = 0                             ' not used
-    I2C_MAX_FREQ= core.I2C_MAX_FREQ
-
-
     { default I/O settings; these can be overridden in the parent object }
-    SCL         = DEF_SCL
-    SDA         = DEF_SDA
-    I2C_FREQ    = DEF_HZ
-    I2C_ADDR    = DEF_ADDR
+    SCL         = 28
+    SDA         = 29
+    I2C_FREQ    = 100_000
+    I2C_ADDR    = 0
 
 
     { measurement repeatability }
     LOW         = core.MEAS_TRH_LOWPREC
     MED         = core.MEAS_TRH_MEDPREC
     HIGH        = core.MEAS_TRH_HIGHPREC
+
+
+    SLAVE_WR    = core.SLAVE_ADDR
+    SLAVE_RD    = core.SLAVE_ADDR|1
+    I2C_MAX_FREQ= core.I2C_MAX_FREQ
 
 
 OBJ
@@ -63,8 +56,15 @@ PUB start(): status
     return startx(SCL, SDA, I2C_FREQ, I2C_ADDR)
 
 
-PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, I2C_ADDR): status
-' Start using custom IO pins and I2C bus frequency
+PUB startx(SCL_PIN, SDA_PIN, I2C_HZ, ADDR_BITS): status
+' Start the driver with custom I/O settings
+'   SCL_PIN:    I2C clock, 0..31
+'   SDA_PIN:    I2C data, 0..31
+'   I2C_HZ:     I2C clock speed (max official specification is 400_000 but is unenforced)
+'   ADDR_BITS:  I2C alternate address bit (unused)
+'   Returns:
+'       cog ID+1 of I2C engine on success (= calling cog ID+1, if the bytecode I2C engine is used)
+'       0 on failure
     if ( lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) )
         if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             time.usleep(core.T_POR)             ' wait for device startup
@@ -102,10 +102,11 @@ PUB heater_enabled(e)
 
 
 VAR byte _heater_cmd
-PUB heater_set_current(c)
+PUB heater_set_current(hc): v
 ' Set heater current, in milliamperes
 '   NOTE: Values are approximate/typical, and valid only at a supply of 3.3V
-    case c
+    v := 0
+    case hc
         60:
             _heater_cmd := (_heater_cmd & !core.HEATER_LEVEL_MASK) | core.HEATER_HI
         33:
@@ -142,6 +143,7 @@ PUB heater_set_duration(d)
         other:
             _heater_cmd |= core.HEATER_LO
 
+
 pub measure() | tmp
 ' Perform a measurement
     tmp := 0
@@ -150,10 +152,11 @@ pub measure() | tmp
     _last_rh := tmp.word[1]
 
 
-PUB repeatability(r)
+PUB repeatability(r): s
 ' Set measurement repeatability/stability
 '   Valid values: LOW (0), MED (1), HIGH (2)
 '   Any other value returns the current setting
+    s := 0
     case r
         LOW, MED, HIGH:
             _repeatability := r
