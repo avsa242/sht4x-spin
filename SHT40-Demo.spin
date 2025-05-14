@@ -5,8 +5,8 @@
         * Temp/RH data output
     Author:         Jesse Burt
     Started:        Oct 27, 2023
-    Updated:        Sep 5, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        May 14, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -37,9 +37,9 @@ PUB main() | temp, rh, tscl
         ser.pos_xy(0, 3)
         temp := sensor.temperature()
         rh := sensor.rh()
-        tscl := lookupz(sensor.temp_scale(-2): "C", "F", "K")
-        ser.printf3(@"Temp. (deg %c): %3.3d.%02.2d\n\r", tscl, (temp / 100), ||(temp // 100))
-        ser.printf2(@"Rel. humidity (%%): %3.3d.%02.2d\n\r", (rh / 100), (rh // 100))
+        tscl := lookupz(sensor.temp_scale(): "C", "F", "K")
+        ser.printf(@"Temp. (deg %c): %3.3d.%02.2d\n\r", tscl, (temp / 100), ||(temp // 100))
+        ser.printf(@"Rel. humidity (%%): %3.3d.%02.2d\n\r", (rh / 100), (rh // 100))
 
 
 PUB setup()
@@ -58,7 +58,7 @@ PUB setup()
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
